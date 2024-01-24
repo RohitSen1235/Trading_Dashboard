@@ -11,12 +11,7 @@ const myChart = new Chart(ctx, {
         datasets: [{
             label: '# of trades',
             data: [50, 50],  // Initial dummy data
-            borderWidth: 1,
-            backgroundColor: [
-              'rgb(18, 255, 26, 0.9)',
-              'rgb(255, 18, 26, 0.9)',
-            ],
-            hoverOffset: 8
+            borderWidth: 1
         }]
     },
     options: {}
@@ -118,7 +113,7 @@ const drawdown_chart = new Chart(ctx_drawdown, {
         labels: [],
         datasets: [{
             // label: 'PnL $',
-            data: [],  // Initial dummy data
+            data: [50, 50],  // Initial dummy data
             borderWidth: 1,
             fill:false,
             pointRadius: 0,

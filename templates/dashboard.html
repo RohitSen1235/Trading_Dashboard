@@ -13,10 +13,6 @@
         <div class="card general col-12">
             <h2>PnL</h2>
             <div class="stat">
-                <p>Opening Balance <span class="stat-text">{{opening_balance}}</span></p>
-                <p>Closing Balance <span class="stat-text">{{closing_balance}}</span></p>
-                <hr>
-                <p><span class="stat-text">{{profit}}</span></p>
                 <p>    
                     <div class="arrow-container">
                         <!-- SVG for the green up arrow -->
@@ -29,6 +25,10 @@
                         <div class="percentage-text">{{percentage_gain}}%</div>
                     </div>
                 </p>
+                <p>Opening Balance <span class="stat-text">{{opening_balance}}</span></p>
+                <p>Closing Balance <span class="stat-text">{{closing_balance}}</span></p>
+                <hr>
+                <p><span class="stat-text">{{profit}}</span></p>
             </div>
         </div> 
     </div> 
@@ -62,15 +62,15 @@
 <div class="column column3">
     <div class="row">
         <div class="col-12 card card-chart">
-            <h4><small>Drawdown Analysis</small></h4>
-            <div class="stat">
-                <canvas id="drawdown-chart"></canvas>
-            </div>
-        </div>
-        <div class="col-12 card card-chart">
             <h4><small>Monthly PnL Chart</small></h4>
             <div class="stat">
                 <canvas id="monthly_pnl-chart"></canvas>
+            </div>
+        </div>
+        <div class="col-12 card card-chart">
+            <h4><small>Drawdown Analysis</small></h4>
+            <div class="stat">
+                <canvas id="drawdown-chart"></canvas>
             </div>
         </div>
     </div>
@@ -86,7 +86,7 @@
             </div>
         </div>
         <div class="col-12 card card-medium">
-            <h4><small>Most Profitable Tickers</small></h4>
+            <h4><small>Highest Profit Makers</small></h4>
             <div class="stat">
                 <table class="table">
                     <thead>
@@ -100,6 +100,27 @@
                     <tr>
                         <td><small class="text-profit">{{key}}</small></td>
                         <td><small class="text-profit">{{value}}</small></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col-12 card card-medium">
+            <h4><small>Highest Loss Makers</small></h4>
+            <div class="stat">
+                <table class="table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Ticker</th>
+                        <th scope="col">Loss</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                    {% for key,value in loss_tickers.items %}
+                    <tr>
+                        <td><small class="text-loss">{{key}}</small></td>
+                        <td><small class="text-loss">{{value}}</small></td>
                     </tr>
                     {% endfor %}
                     </tbody>

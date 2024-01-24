@@ -1,6 +1,19 @@
 import pandas as pd
 import numpy as np
 
+def currency_abbreviation(number):
+    abbreviations = [(1e12, 'T'), (1e9, 'B'), (1e6, 'M'), (1e3, 'K')]
+
+    for factor, suffix in abbreviations:
+        if number >= factor:
+            formatted_number = "{:.2f}{}".format(number / factor, suffix)
+            break
+    else:
+        formatted_number = "{:,.2f}".format(number)  # Default format for smaller numbers
+
+    return formatted_number
+
+
 class Stack:
     def __init__(self):
         self.items = []
@@ -47,7 +60,6 @@ class Trades():
 
         # self.closing_balance = float(self.original_data[self.original_data['Description'] == 'Closing']['Balance'])
         self.closing_balance = float(self.original_data.loc[self.original_data['Description'] == 'Closing', 'Balance'].iloc[0])
-
 
 
     def extract_trades(self):
@@ -121,6 +133,7 @@ class Trades():
 
 
     def compute_portfolio_value(self):
+
         if not self.Trades_Extracted:
             print("Error: Trades have not been extracted.")
             return None
@@ -139,39 +152,23 @@ class Trades():
         # Group by 'CloseDate' and calculate the average 'Portfolio_value'
         self.portfolio_df['Portfolio_value'] = self.portfolio_df.groupby('CloseDate')['Portfolio_value'].transform('mean')
 
-        #  # Define a custom formatter for the y-axis
-        # def drawdown_formatter(x, pos):
-        #     return f"${abs(x):,.2f}"  # Use absolute value for drawdowns
-
-        # # return portfolio_df
-        # # Plotting Time Series for Portfolio Value (Balance) at "Close" points
-        # plt.figure(figsize=(12, 6))
-        # plt.plot(self.portfolio_df['CloseDate'], self.portfolio_df['Portfolio_value'], marker='', linestyle='-', color='b')
-        # plt.title('Portfolio Value at "Close" Points Over Time')
-        # plt.xlabel('Date')
-        # plt.ylabel('Portfolio Value')
-        # plt.legend()
-        # # Apply the custom formatter to the y-axis
-        # plt.gca().yaxis.set_major_formatter(drawdown_formatter)
-        # plt.grid(True)
-        # plt.show()
-        # return self.portfolio_df
 
     def compute_hit_ratio(self):
         if not self.Trades_Extracted:
             print("Error: Trades have not been extracted.")
             return None
 
-        # Calculate the hit ratio
-        # hit_ratio = self.trades_df[self.trades_df['ProfitLoss'] >= 0].shape[0] / self.trades_df.shape[0]
         profitable_trades = self.trades_df[self.trades_df['ProfitLoss'] > 0].shape[0]
         loss_trades = self.trades_df[self.trades_df['ProfitLoss'] <= 0].shape[0]
+
         hit_ratio = np.round(profitable_trades / loss_trades,2)
         # print(f"Hit Ratio: {hit_ratio:.2f}")
         return hit_ratio, profitable_trades, loss_trades
 
+
     def get_drawdown_analysis(self):
         # compute portfolio value first
+        # mandatory step
         self.compute_portfolio_value()
         
         df = self.portfolio_df[['CloseDate','Portfolio_value']].copy()
@@ -180,24 +177,8 @@ class Trades():
         df["PreviousPeak"] = df["Portfolio_value"].cummax()
         df["Drawdown"] = df["Portfolio_value"] - df["PreviousPeak"]
 
-        # # Define a custom formatter for the y-axis
-        # def drawdown_formatter(x, pos):
-        #     return f"${abs(x):,.2f}"  # Use absolute value for drawdowns
-
-        # # Plot drawdowns over time
-        # plt.figure(figsize=(10, 6))
-        # plt.plot(df["CloseDate"], df["Drawdown"], label="Drawdown")
-        # plt.title("Portfolio Drawdown Analysis")
-        # plt.xlabel("Close Date")
-        # plt.ylabel("Drawdown")
-        # plt.legend()
-
-        # # Apply the custom formatter to the y-axis
-        # plt.gca().yaxis.set_major_formatter(drawdown_formatter)
-
-        # plt.grid(True)
-        # plt.show()
         return df['CloseDate'].to_list(),df['Drawdown'].to_list()
+
 
     def get_intraday_trades(self):
         if not self.Trades_Extracted:
@@ -205,12 +186,14 @@ class Trades():
             return None
         return self.trades_df[self.trades_df['IsIntraday'] == True]
 
+
     def get_swing_trades(self):
         if not self.Trades_Extracted:
             print("Error: Trades have not been extracted.")
             return None
         return self.trades_df[self.trades_df['IsIntraday'] == False]
-    
+
+
     def get_num_trades(self):
 
         total_trades = self.trades_df.shape[0]
@@ -219,17 +202,30 @@ class Trades():
         margil_calls = self.MarginCall_df.shape[0]
 
         return (total_trades,swing_trades,intraday_trades,margil_calls)
-    
+
+
     def get_balance(self):
         return (self.opening_balance,self.closing_balance)
-    
+
+
     def get_most_profitable_tickers(self):
 
         most_profitable_tickers = pd.DataFrame(self.trades_df.groupby('Ticker')['ProfitLoss'].sum().nlargest(3))
+        
+        most_profitable_tickers = most_profitable_tickers.to_dict()['ProfitLoss']
+        
+        return most_profitable_tickers
 
-        # returns dict of the dataframe
-        return most_profitable_tickers.to_dict()
+
+    def get_least_profitable_tickers(self):
+
+        least_profitable_tickers = pd.DataFrame(self.trades_df.groupby('Ticker')['ProfitLoss'].sum().nsmallest(3))
+
+        least_profitable_tickers = least_profitable_tickers.to_dict()['ProfitLoss']
+        
+        return least_profitable_tickers
     
+
     def get_monthly_profitloss(self):
 
         df=self.trades_df.copy()
@@ -241,3 +237,7 @@ class Trades():
         monthly_profit_loss.drop(columns=['month'], inplace=True)
         
         return monthly_profit_loss.to_dict()
+    
+
+    def next_fn(self):
+        pass
