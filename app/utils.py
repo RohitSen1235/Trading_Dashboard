@@ -184,7 +184,10 @@ class Trades():
 
         return df['CloseDate'].to_list(),df['Drawdown'].to_list()
 
-
+    def compute_max_drawdown(self):
+        _,drawdown_list = self.get_drawdown_analysis()
+        return min(drawdown_list)
+    
     def get_intraday_trades(self):
         if not self.Trades_Extracted:
             print("Error: Trades have not been extracted.")
@@ -310,7 +313,7 @@ class Trades():
         sector_none = self.trades_df[self.trades_df["Sector"]=="NONE"].copy()
         return sector_none
 
-    
+
     def next_fn(self):
         pass
 

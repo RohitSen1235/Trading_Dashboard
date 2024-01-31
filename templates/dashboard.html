@@ -7,29 +7,39 @@
         <div class="card general col-12">
             <h2>General Info</h2>
             <p>Uploaded file: {{file_name}}</p>
-            <p>Time Frame  <span>{{time_frame}}</span></p>
-            <!-- <p>Opening Balance <span>{{opening_balance}}</span></p> -->
-        </div> 
-        <div class="card general col-12">
-            <h2>PnL</h2>
+            <hr>
+            <h2>PnL</h2>   
             <div class="stat">
-                <p>    
+                <p> 
                     <div class="arrow-container">
+                        <h4>{{profit_formated}}</h4>
+                        {% if profit > 0%}
                         <!-- SVG for the green up arrow -->
                         <svg class="arrow-svg-green" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12 2l8 8H4z" />
                             <path d="M0 0h24v24H0z" fill="none" />
                         </svg>
-                    
-                        <!-- Percentage value below the arrow -->
-                        <div class="percentage-text">{{percentage_gain}}%</div>
+                        {% else %}
+                        <svg class="arrow-svg-red" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 22l-8-8h16z" />
+                            <path d="M0 0h24v24H0z" fill="none" />
+                        </svg>                        
+                        {% endif %}
                     </div>
                 </p>
                 <p>Opening Balance <span class="stat-text">{{opening_balance}}</span></p>
                 <p>Closing Balance <span class="stat-text">{{closing_balance}}</span></p>
-                <hr>
-                <p><span class="stat-text">{{profit}}</span></p>
             </div>
+            <hr>
+        </div> 
+        <div class="card-sector general col-12">
+            <div class="smaller-div">Text 1</div>
+            <div class="smaller-div">Text 2</div>
+            <div class="smaller-div">Text 3</div>
+            <div class="smaller-div">Text 2</div>
+            <div class="smaller-div">Text 3</div>
+            <div class="smaller-div">Text 2</div>
+            <div class="smaller-div">Text 3</div>
         </div> 
     </div> 
 </div>
@@ -38,6 +48,15 @@
         <h4><small>Total Trades</small></h4>
         <div class="stat">
             <p class="stat-text">{{total_num_trades}}</p>
+        </div>
+    </div>
+    <div class="card card-info">
+        <h4><small>Margin Calls</small></h4>
+        <div class="stat">
+            <p class="stat-text">{{num_margin_calls}}</p>
+        </div>
+        <div class="stat">
+            
         </div>
     </div>
     <div class="card card-info">
@@ -58,13 +77,14 @@
             <p class="stat-text"><a href="{% url 'intraday_stats' %}">Go -></a></p>
         </div>
     </div>
+
     <div class="card card-info">
-        <h4><small>Margin Calls</small></h4>
+        <h4><small>Max Drawdown</small></h4>
         <div class="stat">
-            <p class="stat-text">{{num_margin_calls}}</p>
+            <p class="stat-text">{{max_drawdown}}</p>
         </div>
         <div class="stat">
-            <p class="stat-text"><a href="">Get Stats</a></p>
+            <p class="stat-text"><a href="{% url 'drawdown' %}">drawdown analysis</a></p>
         </div>
     </div>
 </div>
@@ -76,12 +96,12 @@
                 <canvas id="monthly_pnl-chart"></canvas>
             </div>
         </div>
-        <div class="col-12 card card-chart">
+        <!-- <div class="col-12 card card-chart">
             <h6><small>Drawdown Analysis</small></h6>
             <div class="stat">
                 <canvas id="drawdown-chart"></canvas>
             </div>
-        </div>
+        </div> -->
         <div class="col-12 card card-chart-vertical">
             <h6><small>Sector Analysis</small></h6>
             <div class="stat">

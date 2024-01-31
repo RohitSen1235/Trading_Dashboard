@@ -46,56 +46,59 @@ def dashboard(request):
     content={}
     
     global data
-
-    if 'excelFile' in request.FILES:
-
-        excel_file = request.FILES['excelFile']
-        # Process the uploaded Excel file as needed
-        # You can use libraries like pandas to read and manipulate the Excel data
-        # Example: Print the name of the uploaded file
-        print("Uploaded Excel file name:", excel_file.name)
-
-        content['file_name'] = excel_file.name
-        
-        # data = pd.read_excel(excel_file)
-        data = Trades(excel_file)
-        
-        # extracting trades mandatory step
-        data.extract_trades()
-        
-        data.get_sector_for_all_Trades()
-        print(data.trades_df)
-        problamatic_tickers = data.get_sector_none()
-        print(problamatic_tickers)
-        # computing hit ratio
-        content['hit_ratio'],content['n_profit_trades'],content['n_loss_trades'] = data.compute_hit_ratio()
-        
-        # getting count of different catagory of trades
-        trades_all = data.get_num_trades()
-        content['total_num_trades'] = trades_all[0]
-        content['num_swing_trades'] = trades_all[1]
-        content['num_intraday_trades'] = trades_all[2]
-        content['num_margin_calls'] = trades_all[3]
-        
-        # get opening and closing balances
-        balances = data.get_balance()
-        content['opening_balance'] = currency_abbreviation(balances[0])
-        content['closing_balance'] = currency_abbreviation(balances[1])
-        content['profit'] = currency_abbreviation(balances[1] - balances[0])
-        content['percentage_gain'] = np.round((balances[1] - balances[0])*100/balances[0], 2)
-        content['profitable_tickers'] = data.get_most_profitable_tickers()
-        content['loss_tickers']  =data.get_least_profitable_tickers()
-        # Example: Save the file to a specific location
-        # with open('path/to/save/' + excel_file.name, 'wb') as destination:
-        #     for chunk in excel_file.chunks():
-        #         destination.write(chunk)
-
     if request.method == "POST":
-        pass
+
+        if 'excelFile' in request.FILES:
+
+            excel_file = request.FILES['excelFile']
+            # Process the uploaded Excel file as needed
+            # You can use libraries like pandas to read and manipulate the Excel data
+            # Example: Print the name of the uploaded file
+            print("Uploaded Excel file name:", excel_file.name)
+
+            content['file_name'] = excel_file.name
+
+            # data = pd.read_excel(excel_file)
+            data = Trades(excel_file)
+
+            # extracting trades mandatory step
+            data.extract_trades()
+
+            data.get_sector_for_all_Trades()
+            print(data.trades_df)
+            problamatic_tickers = data.get_sector_none()
+            print(problamatic_tickers)
+            # computing hit ratio
+            content['hit_ratio'],content['n_profit_trades'],content['n_loss_trades'] = data.compute_hit_ratio()
+
+            max_drawdown = currency_abbreviation(data.compute_max_drawdown())
+            content['max_drawdown'] = max_drawdown
+            # getting count of different catagory of trades
+            trades_all = data.get_num_trades()
+            content['total_num_trades'] = trades_all[0]
+            content['num_swing_trades'] = trades_all[1]
+            content['num_intraday_trades'] = trades_all[2]
+            content['num_margin_calls'] = trades_all[3]
+
+            # get opening and closing balances
+            balances = data.get_balance()
+            content['opening_balance'] = currency_abbreviation(balances[0])
+            content['closing_balance'] = currency_abbreviation(balances[1])
+            content['profit'] = balances[1] - balances[0]
+            content['profit_formated'] = currency_abbreviation(content['profit'])
+            content['percentage_gain'] = np.round((balances[1] - balances[0])*100/balances[0], 2)
+            content['profitable_tickers'] = data.get_most_profitable_tickers()
+            content['loss_tickers']  =data.get_least_profitable_tickers()
+            # Example: Save the file to a specific location
+            # with open('path/to/save/' + excel_file.name, 'wb') as destination:
+            #     for chunk in excel_file.chunks():
+            #         destination.write(chunk)
     
     return render(request,"dashboard.html",context=content)
 
-
+def drawdown(request):
+    content={}
+    return render(request,"drawdown.html",context=content)
 
 def intraday_stats(request):
 
@@ -117,7 +120,7 @@ def intraday_stats(request):
 
 def swing_stats(request):
 
-    content={"current_segment" : "Intraday"}
+    content={"current_segment" : "Swing"}
 
     global data
 

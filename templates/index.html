@@ -2,7 +2,7 @@
 {% block content %}
 <div class="container">
     <h1>Upload Excel File</h1>
-    <form action="{% url 'dashboard' %}" method="get" enctype="multipart/form-data"> {% csrf_token %}
+    <form action="{% url 'dashboard' %}" method="post" enctype="multipart/form-data"> {% csrf_token %}
         <label for="fileInput">Choose an Excel file:</label>
         <input type="file" id="fileInput" name="excelFile" accept=".xls, .xlsx" required>
         <button type="submit">Upload</button>

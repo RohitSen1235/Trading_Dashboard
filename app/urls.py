@@ -5,6 +5,7 @@ urlpatterns = [
     path('', views.index,name="index"),
     path('save-db/',views.save_sector_db, name="save_db"),
     path('dashboard/', views.dashboard,name="dashboard"),
+    path('drawdown/',views.drawdown,name="drawdown"),
     # 
     path('get-hit-ratio/', views.get_overall_hitratio,name="hit_ratio"),
     path('get-monthly-pnl/', views.get_overall_monthly_profitloss,name="get_monthly_pnl"),

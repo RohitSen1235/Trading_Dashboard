@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="card card-chart-max">
+    <h6><small>Drawdown Analysis</small></h6>
+    <div class="stat">
+        <canvas id="drawdown-chart"></canvas>
+    </div>
+</div>
+
+<script src="{% static 'scripts/drawdown_chart.js' %}"></script>
+{% endblock %}
