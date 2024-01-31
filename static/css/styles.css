@@ -36,11 +36,11 @@ body {
     width: 10%;
 }
 .column3 {
-    width: 30%;
+    width: 40%;
 }
 
 .column4 {
-    width: 20%;
+    width: 30%;
 }
 
 h1 {
@@ -108,8 +108,15 @@ button:hover {
 
 .card-chart {
     position: relative;
-    max-width: 850px;
-    max-height: 45vh;
+    max-width: 900px;
+    max-height: 50vh;
+    overflow: scroll;
+}
+
+.card-chart-vertical {
+    position: relative;
+    max-width: 900px;
+    max-height: 70vh;
     overflow: scroll;
 }
 
@@ -133,8 +140,15 @@ canvas {
     font-family: Arial, sans-serif;
 }
 /* Style the arrow SVG */
-.arrow-svg {
+.arrow-svg-green {
     fill: green;
+    width: 50px; /* Adjust the width as needed */
+    height: 50px; /* Adjust the height as needed */
+    margin-bottom: 10px; /* Margin between arrow and percentage */
+}
+
+.arrow-svg-red {
+    fill: red;
     width: 50px; /* Adjust the width as needed */
     height: 50px; /* Adjust the height as needed */
     margin-bottom: 10px; /* Margin between arrow and percentage */

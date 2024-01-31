@@ -108,8 +108,15 @@ button:hover {
 
 .card-chart {
     position: relative;
-    max-width: 850px;
-    max-height: 45vh;
+    max-width: 900px;
+    max-height: 50vh;
+    overflow: scroll;
+}
+
+.card-chart-vertical {
+    position: relative;
+    max-width: 900px;
+    max-height: 70vh;
     overflow: scroll;
 }
 

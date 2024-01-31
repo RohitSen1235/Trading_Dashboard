@@ -1,11 +1,15 @@
 import pandas as pd
 import numpy as np
+from app.models import Ticker
+import requests
+from time import sleep
+import yfinance as yf
 
 def currency_abbreviation(number):
     abbreviations = [(1e12, 'T'), (1e9, 'B'), (1e6, 'M'), (1e3, 'K')]
 
     for factor, suffix in abbreviations:
-        if number >= factor:
+        if abs(number) >= factor:
             formatted_number = "{:.2f}{}".format(number / factor, suffix)
             break
     else:
@@ -41,6 +45,7 @@ class Stack:
     def size(self):
         return len(self.items)
     
+
 class Trades():
     """
     Class to extract trades from a given excel file
@@ -184,14 +189,14 @@ class Trades():
         if not self.Trades_Extracted:
             print("Error: Trades have not been extracted.")
             return None
-        return self.trades_df[self.trades_df['IsIntraday'] == True]
+        return self.trades_df[self.trades_df['IsIntraday'] == True].copy()
 
 
     def get_swing_trades(self):
         if not self.Trades_Extracted:
             print("Error: Trades have not been extracted.")
             return None
-        return self.trades_df[self.trades_df['IsIntraday'] == False]
+        return self.trades_df[self.trades_df['IsIntraday'] == False].copy()
 
 
     def get_num_trades(self):
@@ -236,8 +241,124 @@ class Trades():
         monthly_profit_loss.index=monthly_profit_loss['month']
         monthly_profit_loss.drop(columns=['month'], inplace=True)
         
-        return monthly_profit_loss.to_dict()
-    
+        return monthly_profit_loss.to_dict()['ProfitLoss']
 
+    def get_sector_profitloss(self):
+        
+        df =self.trades_df.copy()
+
+        sector_pnl = pd.DataFrame(df.groupby('Sector')['ProfitLoss'].sum())
+    
+        return sector_pnl.to_dict()['ProfitLoss']
+
+    def get_sector_for_all_Trades(self):
+        if not self.Trades_Extracted:
+            print(f"LOG :: Sector for Trade : Trades not extracted from raw data yet!!")
+            return
+        
+        for index, row in self.trades_df.iterrows():
+            if row['Ticker'].split()[0].isdigit():
+                if row['Ticker'].split()[1] == "CH":
+                    ticker = f"{row['Ticker'].split()[0]}.SS"
+                elif row['Ticker'].split()[1] == "JP":
+                    ticker = f"{row['Ticker'].split()[0]}.T"
+                elif row['Ticker'].split()[1] == "LN":
+                    ticker = f"{row['Ticker'].split()[0]}.L"
+                elif row['Ticker'].split()[1] == "TT":
+                    ticker = f"{row['Ticker'].split()[0]}.TW"
+                elif row['Ticker'].split()[1] == "JT":
+                    ticker = f"{row['Ticker'].split()[0]}.T"
+            else:
+                if row['Ticker'].split()[1] == "LN":
+                    ticker = f"{row['Ticker'].split()[0]}.L"
+                else:
+                    ticker = row['Ticker'].split()[0]
+
+            print(f"Index {index} : ticker : {ticker}")
+            
+            
+            # check is ticker exists in db already
+            if Ticker.objects.filter(ticker = ticker).exists():
+                ticker_in_db =  Ticker.objects.get(ticker=ticker)
+                self.trades_df.loc[index,'Sector'] = ticker_in_db.get_sector_name()
+                
+            # if ticker doesnt exist in db then get the sector details from API
+            else:
+                print(f"LOG :: {ticker} not found in db")
+                try:
+                    sleep(0.1)
+                    tickerdata = yf.Ticker(ticker)
+                    if tickerdata.info['quoteType'] == 'EQUITY':
+                      self.trades_df.loc[index, 'Sector'] = tickerdata.info['sector']
+                      Ticker.objects.create(ticker = ticker, company_name=tickerdata.info['longName'], industry=tickerdata.info['industry'],sector = tickerdata.info['sector'])
+                    elif tickerdata.info['quoteType'] == 'ETF':
+                      self.trades_df.loc[index, 'Sector'] = 'Financial Services'
+                      Ticker.objects.create(ticker = ticker, company_name=tickerdata.info['longName'],sector = 'Financial Services')
+                    else:
+                      self.trades_df.loc[index, 'Sector'] = tickerdata.info['quoteType']
+                      Ticker.objects.create(ticker = ticker,sector = tickerdata.info['quoteType'])
+            
+                except Exception as e:
+
+                    # print(f"Ticker {ticker} not found")
+                    print(f"Exception thrown for {ticker} : {e}")
+                    self.trades_df.loc[index, 'Sector'] = "NONE"
+                    continue
+
+
+    def get_sector_none(self):
+        sector_none = self.trades_df[self.trades_df["Sector"]=="NONE"].copy()
+        return sector_none
+
+    
     def next_fn(self):
         pass
+
+
+# global utility functions NOT member func of class Trades
+def compute_hit_ratio(df:pd.DataFrame):
+    profitable_trades = df[df['ProfitLoss'] > 0].shape[0]
+    loss_trades = df[df['ProfitLoss'] <= 0].shape[0]
+    hit_ratio = np.round(profitable_trades / loss_trades,2)
+    return hit_ratio, profitable_trades, loss_trades
+
+def compute_profit_loss(df:pd.DataFrame):
+    pnl = np.round(df['ProfitLoss'].sum(),2)
+    return pnl
+
+def get_most_profitable_tickers(df:pd.DataFrame):
+    most_profitable_tickers = pd.DataFrame(df.groupby('Ticker')['ProfitLoss'].sum().nlargest(3))
+    
+    most_profitable_tickers = most_profitable_tickers.to_dict()['ProfitLoss']
+    
+    return most_profitable_tickers
+
+def get_least_profitable_tickers(df:pd.DataFrame):
+
+    least_profitable_tickers = pd.DataFrame(df.groupby('Ticker')['ProfitLoss'].sum().nsmallest(3))
+    
+    least_profitable_tickers = least_profitable_tickers.to_dict()['ProfitLoss']
+    
+    return least_profitable_tickers
+
+def get_monthly_profitloss(df:pd.DataFrame):
+    df_local = df.copy()
+    df_local['month'] = pd.to_datetime(df_local['CloseDate']).dt.month
+    monthly_profit_loss = pd.DataFrame(df_local.groupby('month')['ProfitLoss'].sum())
+    monthly_profit_loss['month'] = monthly_profit_loss.index.map({1: 'Jan', 2: 'Feb', 3: 'Mar', 4: 'Apr', 5: 'May', 6: 'Jun', 7: 'Jul', 8: 'Aug', 9: 'Sep', 10: 'Oct', 11: 'Nov', 12: 'Dec'})
+    monthly_profit_loss.index=monthly_profit_loss['month']
+    monthly_profit_loss.drop(columns=['month'], inplace=True)
+    
+    return monthly_profit_loss.to_dict()['ProfitLoss']
+
+def get_sector_profitloss(df:pd.DataFrame):
+    
+    df_local =df.copy()
+
+    sector_pnl = pd.DataFrame(df_local.groupby('Sector')['ProfitLoss'].sum())
+
+    # sector_pnl.index  = sector_pnl['Sector']
+
+    # sector_pnl.drop(columns=['Sector'], inplace=True)
+
+    return sector_pnl.to_dict()['ProfitLoss']

@@ -1,0 +1,307 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<div class="column column1">
+    <div class="row">
+        <div class="card general col-12">
+            <h2>General Info</h2>
+            <p>Current Stats : {{segment}}</p>
+            <hr>
+            <h2>PnL</h2>   
+            <div class="stat">
+                <p> 
+                    <div class="arrow-container">
+                        <h4>{{profit_formated}}</h4>
+                        {% if profit > 0%}
+                        <!-- SVG for the green up arrow -->
+                        <svg class="arrow-svg-green" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2l8 8H4z" />
+                            <path d="M0 0h24v24H0z" fill="none" />
+                        </svg>
+                        {% else %}
+                        <svg class="arrow-svg-red" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 22l-8-8h16z" />
+                            <path d="M0 0h24v24H0z" fill="none" />
+                        </svg>                        
+                        {% endif %}
+                    </div>
+                </p>
+            </div>
+            <hr>
+        </div> 
+        <div class="card general col-12">
+
+        </div> 
+    </div> 
+</div>
+<div class="column column3">
+    <div class="row">
+        <div class="col-12 card card-chart">
+            <h6><small>Monthly PnL Chart</small></h6>
+            <div class="stat">
+                <canvas id="monthly_pnl-chart"></canvas>
+            </div>
+        </div>
+        <div class="col-12 card card-chart-vertical">
+            <h6><small>Sector Analysis</small></h6>
+            <div class="stat">
+                <canvas id="sector_pnl-chart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="column column4">
+    <div class="row">
+        <div class="col-12 card card-medium">
+            <h4><small>Win Ratio :</small>&nbsp;&nbsp;<strong>{{hit_ratio}}</strong></h4>
+            <div class="stat">
+                <canvas id="myChart"></canvas>
+            </div>
+        </div>
+        <div class="col-12 card card-medium">
+            <h4><small>Highest Profit Makers</small></h4>
+            <div class="stat">
+                <table class="table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Ticker</th>
+                        <th scope="col">Profit</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                    {% for key,value in profitable_tickers.items %}
+                    <tr>
+                        <td><small class="text-profit">{{key}}</small></td>
+                        <td><small class="text-profit">{{value}}</small></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col-12 card card-medium">
+            <h4><small>Highest Loss Makers</small></h4>
+            <div class="stat">
+                <table class="table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Ticker</th>
+                        <th scope="col">Loss</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                    {% for key,value in loss_tickers.items %}
+                    <tr>
+                        <td><small class="text-loss">{{key}}</small></td>
+                        <td><small class="text-loss">{{value}}</small></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>  
+</div>
+
+<script>
+
+const segment = '{{segment}}';
+
+const hitratio = document.getElementById('myChart');
+const ctx = hitratio.getContext('2d');
+
+// Initialize Chart.js with dummy data
+const myChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Wins', 'Loses'],
+        datasets: [{
+            label: '# of trades',
+            data: [50, 50],  // Initial dummy data
+            borderWidth: 1,
+            backgroundColor: [
+              'rgb(18, 255, 26, 0.9)',
+              'rgb(255, 18, 26, 0.9)',
+            ],
+            hoverOffset: 8
+        }]
+    },
+    options: {
+
+    responsive: true,
+    plugins: {
+      legend: {
+        display :false,
+        // position: 'right',
+      },
+      title: {
+        display: true,
+        text: 'Win Ratio'
+      }
+    }
+  },
+});
+
+// Function to fetch data from the backend API
+async function get_hit_ratio(segment) {
+    try {
+        const response = await fetch(`/get-hit-ratio/${segment}`);
+        const received_data = await response.json();
+
+        // Update Chart.js data with the fetched values
+        myChart.data.datasets[0].data = received_data.hit_ratio;
+        myChart.update();  // Update the chart to reflect the new data
+    } catch (error) {
+        console.error('Error fetching data:', error);
+    }
+}
+
+// Call the fetchData function to get data from the backend API
+get_hit_ratio(segment);
+
+
+
+// monthly pnl
+const monthly_pnl = document.getElementById('monthly_pnl-chart');
+const ctx_monthly_pnl = monthly_pnl.getContext('2d');
+
+// Initialize Chart.js with dummy data
+const monthly_pnl_chart = new Chart(ctx_monthly_pnl, {
+    type: 'bar',
+    data: {
+        labels: [],
+        datasets: [{
+            // label: 'PnL $',
+            data: [50, 50],  // Initial dummy data
+            borderWidth: 1,
+            backgroundColor: [
+              'red',
+              'green',
+            ],
+        }]
+    },
+    options: {
+        scales: {
+            y: {
+                ticks: {
+                    callback: function(value, index, values) {
+                        return value.toLocaleString('en-US'); // Format number with commas
+                    }
+                }
+            }
+        },
+        responsive: true,
+        plugins: {
+            legend: {
+              display :false,
+              // position: 'right',
+            },
+            title: {
+              display: true,
+              text: 'Monthly Profit n Loss'
+            }
+        }
+  },
+});
+
+async function get_monthly_pnl(segment) {
+  try {
+      const response = await fetch(`/get-monthly-pnl/${segment}`);
+      const received_data = await response.json();
+
+      // Extract keys and values from the dictionary
+      const keys = Object.keys(received_data.monthly_pnl);
+      const values = Object.values(received_data.monthly_pnl);
+      const bar_colors = received_data.bar_colors;
+
+      // Update Chart.js data with the fetched values
+      monthly_pnl_chart.data.labels = keys;
+      monthly_pnl_chart.data.datasets[0].data = values;
+      monthly_pnl_chart.data.datasets[0].backgroundColor = bar_colors;
+      monthly_pnl_chart.update();  // Update the chart to reflect the new data
+  } catch (error) {
+      console.error('Error fetching data:', error);
+  }
+}
+
+// Call the fetchData function to get data from the backend API
+get_monthly_pnl(segment);
+
+// monthly pnl
+const sector_pnl = document.getElementById('sector_pnl-chart');
+const ctx_sector_pnl = sector_pnl.getContext('2d');
+
+// Initialize Chart.js with dummy data
+const sector_pnl_chart = new Chart(ctx_sector_pnl, {
+    type: 'bar',
+    data: {
+        labels: [],
+        datasets: [{
+            // label: 'PnL $',
+            data: [],  // Initial dummy data
+            borderWidth: 1,
+            backgroundColor: [],
+        }]
+    },
+    options: {
+    indexAxis: 'y',
+    // Elements options apply to all of the options unless overridden in a dataset
+    // In this case, we are setting the border of each horizontal bar to be 2px wide
+    scales: {
+            x: {
+                ticks: {
+                    callback: function(value, index, values) {
+                        return value.toLocaleString('en-US'); // Format number with commas
+                    }
+                }
+            }
+        },
+
+    elements: {
+      bar: {
+        borderWidth: 2,
+      }
+    },
+    responsive: true,
+    plugins: {
+      legend: {
+        display :false,
+        // position: 'right',
+      },
+      title: {
+        display: true,
+        text: 'Sector Profit n Loss'
+      },
+    },
+}
+});
+
+async function get_sector_pnl(segment) {
+  try {
+      const response = await fetch(`/get-sector-pnl/${segment}`);
+      const received_data = await response.json();
+
+      // Extract keys and values from the dictionary
+      const keys = Object.keys(received_data.sector_pnl);
+      const values = Object.values(received_data.sector_pnl);
+      const bar_colors = received_data.bar_colors;
+
+      // Update Chart.js data with the fetched values
+      sector_pnl_chart.data.labels = keys;
+      sector_pnl_chart.data.datasets[0].data = values;
+      sector_pnl_chart.data.datasets[0].backgroundColor = bar_colors;
+      sector_pnl_chart.update();  // Update the chart to reflect the new data
+  } catch (error) {
+      console.error('Error fetching data:', error);
+  }
+}
+
+// Call the fetchData function to get data from the backend API
+get_sector_pnl(segment);
+
+
+
+</script>
+{% endblock %}

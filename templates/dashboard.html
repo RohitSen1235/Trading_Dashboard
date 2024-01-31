@@ -16,7 +16,7 @@
                 <p>    
                     <div class="arrow-container">
                         <!-- SVG for the green up arrow -->
-                        <svg class="arrow-svg" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <svg class="arrow-svg-green" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path d="M12 2l8 8H4z" />
                             <path d="M0 0h24v24H0z" fill="none" />
                         </svg>
@@ -45,11 +45,17 @@
         <div class="stat">
             <p class="stat-text">{{num_swing_trades}}</p>
         </div>
+        <div class="stat">
+            <p class="stat-text"><a href="{% url 'swing_stats' %}">Go -></a></p>
+        </div>
     </div>
     <div class="card card-info">
         <h4><small>Intraday Trades</small></h4>
         <div class="stat">
             <p class="stat-text">{{num_intraday_trades}}</p>
+        </div>
+        <div class="stat">
+            <p class="stat-text"><a href="{% url 'intraday_stats' %}">Go -></a></p>
         </div>
     </div>
     <div class="card card-info">
@@ -57,20 +63,29 @@
         <div class="stat">
             <p class="stat-text">{{num_margin_calls}}</p>
         </div>
+        <div class="stat">
+            <p class="stat-text"><a href="">Get Stats</a></p>
+        </div>
     </div>
 </div>
 <div class="column column3">
     <div class="row">
         <div class="col-12 card card-chart">
-            <h4><small>Monthly PnL Chart</small></h4>
+            <h6><small>Monthly PnL Chart</small></h6>
             <div class="stat">
                 <canvas id="monthly_pnl-chart"></canvas>
             </div>
         </div>
         <div class="col-12 card card-chart">
-            <h4><small>Drawdown Analysis</small></h4>
+            <h6><small>Drawdown Analysis</small></h6>
             <div class="stat">
                 <canvas id="drawdown-chart"></canvas>
+            </div>
+        </div>
+        <div class="col-12 card card-chart-vertical">
+            <h6><small>Sector Analysis</small></h6>
+            <div class="stat">
+                <canvas id="sector_pnl-chart"></canvas>
             </div>
         </div>
     </div>
@@ -79,9 +94,8 @@
 <div class="column column4">
     <div class="row">
         <div class="col-12 card card-medium">
-            <h4><small>Hit Ratio</small></h4>
+            <h4><small>Win Ratio :</small>&nbsp;&nbsp;<strong>{{hit_ratio}}</strong></h4>
             <div class="stat">
-                <span class="stat-text">{{hit_ratio}}</span></h4>
                 <canvas id="myChart"></canvas>
             </div>
         </div>
